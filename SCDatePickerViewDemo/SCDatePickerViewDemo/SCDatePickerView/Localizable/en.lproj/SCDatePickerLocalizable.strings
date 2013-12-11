@@ -1,0 +1,26 @@
+/* 
+  SCDatePickerLocalizable.strings
+  SCDatePickerViewDemo
+
+  Created by Aevitx on 13-12-3.
+  Copyright (c) 2013年 Aevitx. All rights reserved.
+*/
+
+
+"weekday0" = "SUN";
+"weekday1" = "MON";
+"weekday2" = "TUE";
+"weekday3" = "WED";
+"weekday4" = "THU";
+"weekday5" = "FRI";
+"weekday6" = "SAT";
+
+"year" = "";
+"month" = "";
+"day" = "";
+"week" = "";
+"hour" = "h";
+"minute" = "m";
+"second" = "s";
+
+"timePassed" = "The date has passed. T_T";
