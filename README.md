@@ -1,7 +1,7 @@
 SCDatePicker
 ============
 
-预览图：
+效果图：
 ![image](https://github.com/Aevit/SCDatePicker/blob/master/SCDatePickerViewDemo/preview.png)
 
 
