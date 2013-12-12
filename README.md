@@ -20,7 +20,7 @@ Usage（两种构造方法）：
 ----------
 
 首先，复制  SCDatePickerView  这文件夹至你的项目中。然后调用初始化方法:
-
+```
     //init 1
     SCDatePickerView *picker = [[SCDatePickerView alloc] initWithParentView:self.view];
     picker.pickerType = SCDatePickerViewTypeDateAndTime;
@@ -29,19 +29,21 @@ Usage（两种构造方法）：
     picker.delegate = self;
     self.datePicker = picker;
     [self.datePicker show];
-    
+```    
 
 
 
 //delegate方法
-
+```
     - (void)SCDatePickerView:(SCDatePickerView *)datePicker dateDidChange:(NSDate *)date {
         NSLog(@"date:%@", date);
     }
+```
+```
     - (void)SCDatePickerView:(SCDatePickerView *)datePicker didCancel:(UIButton *)sender {
         NSLog(@"cancel");
     }
-
+```
 
 To do：
 ----------
