@@ -2,7 +2,8 @@ SCDatePicker
 ============
 
 效果图：
-![image](https://github.com/Aevit/SCDatePicker/blob/master/SCDatePickerViewDemo/preview.png)
+
+![image](https://raw.github.com/Aevit/SCDatePicker/master/SCDatePickerViewDemo/preview.png)
 
 
 扁平化的日期选择器，可定制化程序比较高（可定制显示年、月、日、周、时、分、秒中的部分）
