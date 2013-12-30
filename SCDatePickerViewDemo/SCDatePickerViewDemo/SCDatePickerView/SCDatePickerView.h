@@ -7,6 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "SCInfiniteScrollView.h"
+
+#define SWITCH_INFINITE_SCROLL  1
 
 typedef enum {
     SCDatePickerViewTypeNone                =   -1,
@@ -20,7 +23,7 @@ typedef enum {
 
 @protocol SCDatePickerViewDelegate;
 
-@interface SCDatePickerView : UIView <UITableViewDelegate, UITableViewDataSource, UIScrollViewDelegate>
+@interface SCDatePickerView : UIView <UITableViewDelegate, UITableViewDataSource, UIScrollViewDelegate, SCInfiniteScrollViewDelegate>
 
 //delegate
 @property (nonatomic, assign) id<SCDatePickerViewDelegate> delegate;

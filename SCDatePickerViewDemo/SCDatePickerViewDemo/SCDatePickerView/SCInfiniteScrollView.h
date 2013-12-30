@@ -10,8 +10,14 @@
 
 #define kTagInfiniteItemView            10
 
-typedef void(^BuildInfiniteViewBlock)(NSMutableArray *itemsArray);
-typedef void(^FillDataBlock)(NSMutableArray *itemsArray, int index, BOOL isScrollUp);
+//typedef void(^BuildInfiniteViewBlock)(NSMutableArray *itemsArray);
+//typedef void(^FillDataBlock)(NSMutableArray *itemsArray, int index, BOOL isScrollUp);
+
+typedef enum {
+    InfiniteScrollTypeUp        =   0,
+    InfiniteScrollTypeDown      =   1,
+    InfiniteScrollTypeEqual     =   2
+} InfiniteScrollType;
 
 @protocol SCInfiniteScrollViewDelegate;
 
@@ -20,20 +26,11 @@ typedef void(^FillDataBlock)(NSMutableArray *itemsArray, int index, BOOL isScrol
 
 
 @property (nonatomic, assign) id<SCInfiniteScrollViewDelegate> scDelegate;
-@property (nonatomic, strong) UIView *infiniteView;
 @property (nonatomic, assign) CGFloat eachItemHeight;
-@property (nonatomic, strong) NSMutableArray *itemsViewArray;
+@property (nonatomic, strong) UIView *centerView;
+@property (nonatomic, assign) int itemNum;
 
-@property (nonatomic, copy) BuildInfiniteViewBlock buildViewBlock;
-@property (nonatomic, copy) FillDataBlock fillDataBlock;
-
-@property (nonatomic, strong) NSMutableArray *dataArray;
-
-//- (id)initWithFrame:(CGRect)frame eachItemHeight:(CGFloat)eachItemHeight buildBlock:(BuildInfiniteViewBlock)block;
-- (void)setupWithEachItemHeight:(CGFloat)eachItemHeight buildBlock:(BuildInfiniteViewBlock)block;
-
-- (void)setBuildViewBlock:(BuildInfiniteViewBlock)buildViewBlock;
-- (void)setFillDataBlock:(FillDataBlock)fillDataBlock;
+- (void)reloadData;
 
 @end
 
@@ -43,15 +40,10 @@ typedef void(^FillDataBlock)(NSMutableArray *itemsArray, int index, BOOL isScrol
 @protocol SCInfiniteScrollViewDelegate <NSObject>
 
 @required
-//- (UIView*)itemViewInScrollView:(SCInfiniteScrollView*)scrollView eachItemHeight:(CGFloat)eachItemHeight;
-//- (void)dataOfItemView:(UIView*)itemView SCInfiniteScrollView:(SCInfiniteScrollView*)scrollView isScrollUp:(BOOL)isScrollUp;
+//每个view的高
+- (CGFloat)eachItemHeightInSCInfiniteScrollView:(SCInfiniteScrollView*)scrollview;
 
-//- (CGFloat)eachItemHeightInSCInfiniteScrollView:(SCInfiniteScrollView*)scrollview;
-//
-//- (NSInteger)numberOfItemsInSCInfiniteScrollView:(SCInfiniteScrollView*)scrollview;
-//
-//- (UIView*)SCInfiniteScrollView:(SCInfiniteScrollView*)scrollview viewForItemAtIndex:(NSInteger)index;
-//
-//- (CGFloat)SCInfiniteScrollView:(SCInfiniteScrollView*)scrollview heightForItemAtIndex:(NSInteger)index;
+//给所有view赋值
+- (UIView*)SCInfiniteScrollView:(SCInfiniteScrollView*)scrollview viewForItemAtIndex:(NSInteger)index infiniteScrollType:(InfiniteScrollType)infiniteScrollType;
 
 @end

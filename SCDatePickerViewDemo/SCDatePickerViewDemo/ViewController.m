@@ -42,6 +42,18 @@
  SCDatePickerViewTypeDate                =   5
  */
 - (void)btnPressed:(UIButton*)sender {
+    if (SWITCH_INFINITE_SCROLL) {
+        if (self.datePicker) {
+            [self.datePicker removeFromSuperview];
+            self.datePicker = nil;
+        }
+        [self buildPicker];
+        return;
+    }
+    
+    
+    
+    
     if (self.datePicker) {
         self.datePicker.pickerType++;
         self.datePicker.pickerType = (self.datePicker.pickerType % 6);
@@ -77,14 +89,15 @@
 
 - (void)buildPicker {
     //init 1
-    SCDatePickerView *picker = [[SCDatePickerView alloc] initWithParentView:self.view];
-    picker.pickerType = SCDatePickerViewTypeDateAndTime;
+//    SCDatePickerView *picker = [[SCDatePickerView alloc] initWithParentView:self.view];
+//    picker.pickerType = SCDatePickerViewTypeDateAndTime;
     
     //init 2
 //    SCDatePickerView *picker = [[SCDatePickerView alloc] initWithParentView:self.view type:SCDatePickerViewTypeDateAndTime];
     
     //init 3
 //    SCDatePickerView *picker = [[SCDatePickerView alloc] initWithParentView:self.view rowNum:6 withYear:YES withMonth:YES withDay:YES withweekday:YES withHour:YES withMinute:YES withSecond:NO];
+    SCDatePickerView *picker = [[SCDatePickerView alloc] initWithParentView:self.view rowNum:6 withYear:YES withMonth:YES withDay:YES withweekday:YES withHour:YES withMinute:YES withSecond:NO];
     
     picker.delegate = self;
     self.datePicker = picker;

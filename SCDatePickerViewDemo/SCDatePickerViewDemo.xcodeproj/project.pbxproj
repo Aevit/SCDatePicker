@@ -53,8 +53,8 @@
 		E1B6D78F184CDEC500FDECF7 /* SCDatePickerDefines.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SCDatePickerDefines.h; path = SCDatePickerView/SCDatePickerDefines.h; sourceTree = "<group>"; };
 		E1D15B98184DB7C100D8FC67 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = "zh-Hans"; path = "zh-Hans.lproj/ViewController.xib"; sourceTree = "<group>"; };
 		E1D15B99184DB7C200D8FC67 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
-		E1D15B9B184DB7D000D8FC67 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = file; name = "zh-Hans"; path = "zh-Hans.lproj/SCDatePickerLocalizable.strings"; sourceTree = "<group>"; };
-		E1D15B9D184DB7DD00D8FC67 /* en */ = {isa = PBXFileReference; lastKnownFileType = file; name = en; path = en.lproj/SCDatePickerLocalizable.strings; sourceTree = "<group>"; };
+		E1D15B9B184DB7D000D8FC67 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/SCDatePickerLocalizable.strings"; sourceTree = "<group>"; };
+		E1D15B9D184DB7DD00D8FC67 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/SCDatePickerLocalizable.strings; sourceTree = "<group>"; };
 		E1E82053184B8E2F00B52D19 /* DCCrossHairView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DCCrossHairView.h; sourceTree = "<group>"; };
 		E1E82054184B8E2F00B52D19 /* DCCrossHairView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DCCrossHairView.m; sourceTree = "<group>"; };
 		E1E82055184B8E2F00B52D19 /* DCFrameView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DCFrameView.h; sourceTree = "<group>"; };

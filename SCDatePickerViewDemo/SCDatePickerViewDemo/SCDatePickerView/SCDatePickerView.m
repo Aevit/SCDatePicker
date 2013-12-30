@@ -156,13 +156,14 @@
                    withSecond:(BOOL)withSecond {
     
     [_containerView.subviews enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-        if ([obj isKindOfClass:[UITableView class]] || [obj isKindOfClass:[UILabel class]]) {
+        if ([obj isKindOfClass:[UITableView class]] || [obj isKindOfClass:NSClassFromString(@"SCInfiniteScrollView")] || [obj isKindOfClass:[UILabel class]]) {
             [obj removeFromSuperview];
             obj = nil;
         }
     }];
     
     int count = 0;
+    _isWeekdayPutInDayTable = ((withYear && withMonth && withDay && withweekday) ? YES : NO);
     CGFloat tableWidth = KSCDatePickerWidth / rowNum;
     if (withYear) {
         [self buildTableViewWithTag:TAG_YEAR frameX:count * tableWidth frameW:tableWidth];
@@ -173,20 +174,14 @@
         count++;
     }
     if (withDay) {
-        [self buildTableViewWithTag:TAG_DAY frameX:count * tableWidth frameW:tableWidth];
+        CGFloat frameW = (_isWeekdayPutInDayTable ? tableWidth + kDayAndWeekWidth : tableWidth);
+        [self buildTableViewWithTag:TAG_DAY frameX:count * tableWidth frameW:frameW];
         count++;
     }
     if (withweekday) {
         //有年月日的话，周根据年月日算出来，并且将 周 合到 日 里
-        _isWeekdayPutInDayTable = ((withYear && withMonth && withDay) ? YES : NO);
         if (!_isWeekdayPutInDayTable) {
             [self buildTableViewWithTag:TAG_WEEKDAY frameX:count * tableWidth frameW:tableWidth];
-        } else {
-            //日的frame宽度要变大
-            UITableView *dayTable = (UITableView*)[_containerView viewWithTag:TAG_DAY];
-            CGRect dayFrame = dayTable.frame;
-            dayFrame.size.width += kDayAndWeekWidth;
-            dayTable.frame = dayFrame;
         }
         count++;
     }
@@ -216,20 +211,30 @@
         frameW += 3;//最后一个table，右边不用空一条线
     }
     
-    CGRect tRect = CGRectMake(frameX, y, frameW - 1, kSCDatePickerHeight);    
-    
-    UITableView *table = [[UITableView alloc] initWithFrame:tRect style:UITableViewStylePlain];
-    table.separatorStyle = UITableViewCellSeparatorStyleNone;
-    table.showsVerticalScrollIndicator = NO;
-    table.backgroundColor = kSCDatePickerBackgroundColorListlView;//kSCDatePickerBackgroundColor;
-    table.tag = tag;
-    table.delegate = self;
-    table.dataSource = self;
-    
-    [self.containerView addSubview:table];
-    
-    [self buildLineLabelInList:table];
-    
+    CGRect tRect = CGRectMake(frameX, y, frameW - 1, kSCDatePickerHeight);
+    if (SWITCH_INFINITE_SCROLL) {
+        SCInfiniteScrollView *list = [[SCInfiniteScrollView alloc] initWithFrame:tRect];
+        list.tag = tag;
+        list.delegate = self;
+        list.scDelegate = self;
+        list.backgroundColor = kSCDatePickerBackgroundColorListlView;
+        list.showsVerticalScrollIndicator = NO;
+        [self.containerView addSubview:list];
+        
+        [self buildLineLabelInList:list];
+    } else {
+        UITableView *table = [[UITableView alloc] initWithFrame:tRect style:UITableViewStylePlain];
+        table.separatorStyle = UITableViewCellSeparatorStyleNone;
+        table.showsVerticalScrollIndicator = NO;
+        table.backgroundColor = kSCDatePickerBackgroundColorListlView;//kSCDatePickerBackgroundColor;
+        table.tag = tag;
+        table.delegate = self;
+        table.dataSource = self;
+        
+        [self.containerView addSubview:table];
+        
+        [self buildLineLabelInList:table];
+    }
 }
 
 - (void)buildLineLabelInList:(UIView*)listView {
@@ -286,29 +291,30 @@
 }
 
 #pragma mark - update
-
-- (void)updateSelectedDateAtIndex:(int)index forScrollView:(UIScrollView*)scrollView {
-    index = index - kBlankItemNum + 1;
+- (void)updateSelectedDateAtIndex:(int)index forScrollView:(UIScrollView*)scrollView justFillTheNum:(BOOL) justFillTheNum {
+    index = (justFillTheNum ? index : index - kBlankItemNum + 1);
     switch (scrollView.tag) {
         case TAG_YEAR:
         {
-            _dateComponets.year = kStartYear + index;
+            _dateComponets.year = (justFillTheNum ? index : kStartYear + index);
             break;
         }
         case TAG_MONTH:
         {
-            _dateComponets.month = index + 1;
+            _dateComponets.month = (justFillTheNum ? index : index + 1);
             break;
         }
         case TAG_DAY:
         {
-            _dateComponets.day = index + 1;
+            _dateComponets.day = (justFillTheNum ? index : index + 1);
             break;
         }
         case TAG_WEEKDAY:
         {
-            _dateComponets.weekday = index + 1;
-            _dateComponets.day = index + 1;
+            int preWeekday = _dateComponets.weekday;
+            _dateComponets.weekday = (justFillTheNum ? index : index + 1);
+            int day = _dateComponets.day + (_dateComponets.weekday - preWeekday);
+            _dateComponets.day = (justFillTheNum ? day - 1 : day);
             break;
         }
         case TAG_HOUR:
@@ -355,26 +361,46 @@
 #pragma mark - scrollview delegate
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     
-    int index = [self getSelectedIndexInScrollView:scrollView];
+    if (SWITCH_INFINITE_SCROLL) {
+        SCInfiniteScrollView *infiniteScrollView = (SCInfiniteScrollView*)scrollView;
+        [infiniteScrollView scrollViewDidEndDragging:scrollView willDecelerate:decelerate];
+        
+    } else {
+        
+        int index = [self getSelectedIndexInScrollView:scrollView];
+        [self updateSelectedDateAtIndex:index forScrollView:scrollView justFillTheNum:NO];
+        [self setScrollView:scrollView atIndex:index animated:YES];
+        [self setScrollView:scrollView atIndex:3 animated:YES];
+    }
     
-    [self updateSelectedDateAtIndex:index forScrollView:scrollView];
-    
-    [self setScrollView:scrollView atIndex:index animated:YES];
 }
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     
-    int index = [self getSelectedIndexInScrollView:scrollView];
-    
-    [self updateSelectedDateAtIndex:index forScrollView:scrollView];
-    
-    [self setScrollView:scrollView atIndex:index animated:YES];
+    if (SWITCH_INFINITE_SCROLL) {
+        SCInfiniteScrollView *infiniteScrollView = (SCInfiniteScrollView*)scrollView;
+        [infiniteScrollView scrollViewDidEndDecelerating:scrollView];
+        
+        [self setScrollView:scrollView atIndex:3 animated:YES];
+        
+    } else {
+        
+        int index = [self getSelectedIndexInScrollView:scrollView];
+        [self updateSelectedDateAtIndex:index forScrollView:scrollView justFillTheNum:NO];
+        [self setScrollView:scrollView atIndex:index animated:YES];
+    }
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    [self highlightLabel:scrollView];
     //    int index = [self getFirstVisibleIndexInScrollView:scrollView];
     //    [self updateSelectedDateAtIndex:index forScrollView:scrollView];
+    
+    if (SWITCH_INFINITE_SCROLL) {
+        SCInfiniteScrollView *infiniteScrollView = (SCInfiniteScrollView*)scrollView;
+        [infiniteScrollView scrollViewDidScroll:scrollView];
+    } else {
+        [self highlightLabel:scrollView];
+    }
 }
 
 - (void)highlightLabel:(UIScrollView*)scrollView {
@@ -400,10 +426,15 @@
             [UIView commitAnimations];
         }
         
-        UITableView *dayTable = (UITableView*)[_containerView viewWithTag:TAG_DAY];
         if (scrollView.tag == TAG_YEAR || scrollView.tag == TAG_MONTH) {//日那一列要根据月、闰年来确定天数
-            if (dayTable) {
-                [dayTable reloadData];
+            if ([_containerView viewWithTag:TAG_DAY]) {
+                if (SWITCH_INFINITE_SCROLL) {
+                    SCInfiniteScrollView *dayList = (SCInfiniteScrollView*)[_containerView viewWithTag:TAG_DAY];
+                    [dayList reloadData];
+                } else {
+                    UITableView *dayTable = (UITableView*)[_containerView viewWithTag:TAG_DAY];
+                    [dayTable reloadData];
+                }
             }
         }
         
@@ -444,22 +475,83 @@
         return cell;
     }
     int num = indexPath.row - kBlankItemNum;
-    switch (tableView.tag) {
+    [self fillDataWithTag:tableView.tag justFillTheNum:NO andNum:num andLabel:lbl];
+    int highlightLblIndex = [self getSelectedIndexInScrollView:tableView];
+    if (indexPath.row == highlightLblIndex + 1) {
+        lbl.textColor = kSCDatePickerFontColorLabelSelected;
+        lbl.font = kSCDatePickerFontLabelSelected;
+    } else {
+        lbl.textColor = kSCDatePickerFontColorLabel;
+        lbl.font = kSCDatePickerFontLabel;
+    }
+    
+    return cell;
+}
+
+- (int)getDefaultNumInListWithTag:(int)tag {
+    switch (tag) {
         case TAG_YEAR:
         {
-            lbl.text = [NSString stringWithFormat:@"%d", kStartYear + num];
+            return _dateComponets.year;
             break;
         }
         case TAG_MONTH:
         {
-            lbl.text = [NSString stringWithFormat:@"%d%@", (num + 1), NSLocalizedStringFromTable(@"month", SCDatePickerLocalizable, nil)];
+            return _dateComponets.month;
             break;
         }
         case TAG_DAY:
         {
-            NSString *str = [NSString stringWithFormat:@"%d%@", (num + 1),  NSLocalizedStringFromTable(@"day", SCDatePickerLocalizable, nil)];
+            return _dateComponets.day;
+            break;
+        }
+        case TAG_WEEKDAY:
+        {
+            return _dateComponets.weekday;
+            break;
+        }
+        case TAG_HOUR:
+        {
+            return _dateComponets.hour;
+            break;
+        }
+        case TAG_MINUTE:
+        {
+            return _dateComponets.minute;
+            break;
+        }
+        case TAG_SECOND:
+        {
+            return _dateComponets.second;
+            break;
+        }
+        default:
+            break;
+    }
+    return 0;
+}
+
+//justFillTheNum表示直接将num的值赋给lbl
+- (void)fillDataWithTag:(int)tag justFillTheNum:(BOOL)justFillTheNum andNum:(int)num andLabel:(UILabel*)lbl {
+    switch (tag) {
+        case TAG_YEAR:
+        {
+            num = (justFillTheNum ? num : kStartYear + num);
+            lbl.text = [NSString stringWithFormat:@"%d", num];
+            break;
+        }
+        case TAG_MONTH:
+        {
+            num = (justFillTheNum ? num : (num + 1));
+            lbl.text = [NSString stringWithFormat:@"%d%@", num, NSLocalizedStringFromTable(@"month", SCDatePickerLocalizable, nil)];
+            break;
+        }
+        case TAG_DAY:
+        {
+            num = (justFillTheNum ? num : (num + 1));
+            NSString *str = [NSString stringWithFormat:@"%d%@", num,  NSLocalizedStringFromTable(@"day", SCDatePickerLocalizable, nil)];
             if (_isWeekdayPutInDayTable) {//
-                int weekday = [SCDatePickerView getWeekdayWithYear:_dateComponets.year month:_dateComponets.month day:(num + 1)];
+                int weekday = [SCDatePickerView getWeekdayWithYear:_dateComponets.year month:_dateComponets.month day:num];
                 NSString *weekdayStr = [NSString stringWithFormat:@"weekday%d", weekday];
                 str = [NSString stringWithFormat:@"%@ %@", str, NSLocalizedStringFromTable(weekdayStr, SCDatePickerLocalizable, nil)];
             }
@@ -468,22 +560,26 @@
         }
         case TAG_WEEKDAY:
         {
+//            num = (setDefaultData ? num : num);
             NSString *weekdayStr = [NSString stringWithFormat:@"weekday%d", num];
             lbl.text = NSLocalizedStringFromTable(weekdayStr, SCDatePickerLocalizable, nil);
             break;
         }
         case TAG_HOUR:
         {
+//            num = (setDefaultData ? num : num);
             lbl.text = [NSString stringWithFormat:@"%d", num];
             break;
         }
         case TAG_MINUTE:
         {
+//            num = (setDefaultData ? num : num);
             lbl.text = [NSString stringWithFormat:@"%d", num];
             break;
         }
         case TAG_SECOND:
         {
+//            num = (setDefaultData ? num : num);
             lbl.text = [NSString stringWithFormat:@"%d", num];
             break;
         }
@@ -493,13 +589,68 @@
         }
             break;
     }
-    int highlightLblIndex = [self getSelectedIndexInScrollView:tableView];
-    if (indexPath.row == highlightLblIndex + 1) {
-        lbl.textColor = kSCDatePickerFontColorLabelSelected;
-        lbl.font = kSCDatePickerFontLabelSelected;
+}
+
+#pragma mark - SCInfiniteScrollView delegate
+- (CGFloat)eachItemHeightInSCInfiniteScrollView:(SCInfiniteScrollView *)scrollview {
+    return kSCDatePickerItemHeight;
+}
+
+- (UIView*)SCInfiniteScrollView:(SCInfiniteScrollView *)scrollview viewForItemAtIndex:(NSInteger)index infiniteScrollType:(InfiniteScrollType)infiniteScrollType {
+    
+    int tag = scrollview.tag;
+    UILabel *cell = (UILabel*)[scrollview viewWithTag:kTagInfiniteItemView + index];
+    
+    if (!cell) {
+        UILabel *lbl = [[UILabel alloc] initWithFrame:CGRectMake(0, index * kSCDatePickerItemHeight, scrollview.frame.size.width, kSCDatePickerItemHeight)];
+        lbl.textAlignment = ALIGN_CENTER;
+        int firstData = (tag == TAG_YEAR ? kStartYear : (tag == TAG_MONTH || tag == TAG_DAY || tag == TAG_WEEKDAY ? 1 : 0));
+        lbl.text = [NSString stringWithFormat:@"%d", (firstData + index)];
+        lbl.backgroundColor = kSCDatePickerBackgroundColorListlView;// kSCDatePickerBackgroundColor;
+        lbl.tag = kTagInfiniteItemView + index;
+        cell = lbl;
+        [scrollview addSubview:lbl];
+        
+        if (index == scrollview.itemNum / 2) {
+            cell.textColor = kSCDatePickerFontColorLabelSelected;
+            cell.font = kSCDatePickerFontLabelSelected;
+        } else {
+            lbl.textColor = kSCDatePickerFontColorLabel;
+            lbl.font = kSCDatePickerFontLabel;
+        }
+    }
+    
+    int preTextNum = [cell.text intValue];
+    
+    if (self.dateComponets) {
+        NSLog(@"tag:%d", tag);
+    }
+    if (infiniteScrollType == InfiniteScrollTypeEqual) {
+        preTextNum = [self getDefaultNumInListWithTag:tag] + index - 3;
     } else {
-        lbl.textColor = kSCDatePickerFontColorLabel;
-        lbl.font = kSCDatePickerFontLabel;
+        preTextNum = fabsf((infiniteScrollType == InfiniteScrollTypeUp ? preTextNum + 1 : (infiniteScrollType == InfiniteScrollTypeDown ? preTextNum - 1 : preTextNum)));
+    }
+    BOOL isStartFromZero = (tag == TAG_HOUR || tag == TAG_MINUTE || tag == TAG_SECOND ? YES : NO);
+    int allNum = [self getRowNumInListWithTag:tag];
+    int maxNum = (tag == TAG_YEAR ? kMaxYear : allNum - (isStartFromZero ? 1 : 0));
+    
+    if (isStartFromZero) {
+        if (preTextNum == -1) {
+            preTextNum = maxNum - 1;
+        } else if (preTextNum >= maxNum) {
+            preTextNum = preTextNum - maxNum + 1;
+        }
+    } else {
+        if (preTextNum == 0) {
+            preTextNum = maxNum;
+        } else if (preTextNum > maxNum) {
+            preTextNum = preTextNum - maxNum;
+        }
+    }
+    [self fillDataWithTag:tag justFillTheNum:YES andNum:preTextNum andLabel:cell];
+    
+    if (index == scrollview.itemNum / 2) {//中间的
+        [self updateSelectedDateAtIndex:preTextNum forScrollView:scrollview justFillTheNum:YES];
     }
     
     return cell;
@@ -611,11 +762,14 @@
     if (self.calendar == nil) {
         self.calendar = [NSCalendar currentCalendar];
     }
-//    if (self.dateComponets == nil) {
-        unsigned unitFlags = NSYearCalendarUnit|NSMonthCalendarUnit|NSDayCalendarUnit|NSWeekdayCalendarUnit|NSHourCalendarUnit|NSMinuteCalendarUnit;
-        self.dateComponets = [_calendar components:unitFlags fromDate:_date];
-//    }
+    unsigned unitFlags = NSYearCalendarUnit|NSMonthCalendarUnit|NSDayCalendarUnit|NSWeekdayCalendarUnit|NSHourCalendarUnit|NSMinuteCalendarUnit;
+    self.dateComponets = [_calendar components:unitFlags fromDate:_date];
+    
     for (id obj in self.containerView.subviews) {
+        if ([obj isKindOfClass:NSClassFromString(@"SCInfiniteScrollView")]) {
+            SCInfiniteScrollView *list = (SCInfiniteScrollView*)obj;
+            [list reloadData];
+        } else 
         if ([obj isKindOfClass:[UITableView class]]) {
             UITableView *table = (UITableView*)obj;
             NSInteger middleRowNum = 2;
@@ -714,6 +868,7 @@
     }
     [self setDate:_date withAnimation:NO];
 }
+
 
 #pragma makr - dealloc
 - (void)dealloc {
